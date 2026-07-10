@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zirú — Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --black: #0A0A0A;
+    --white: #FFFFFF;
+    --gray-50: #F9F9F9;
+    --gray-100: #F0F0F0;
+    --gray-200: #E0E0E0;
+    --gray-400: #9A9A9A;
+    --gray-600: #5A5A5A;
+    --accent: #1A1A1A;
+    --green: #1D8348;
+    --green-light: #EAFAF1;
+    --red: #C0392B;
+    --red-light: #FDEDEC;
+    --amber: #D97706;
+    --amber-light: #FEF9EE;
+    --blue: #1A56DB;
+    --blue-light: #EBF5FF;
+    --radius: 20px;
+    --radius-sm: 12px;
+    --shadow: 0 2px 20px rgba(0,0,0,0.07);
+    --shadow-md: 0 4px 40px rgba(0,0,0,0.10);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--gray-50);
+    color: var(--black);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 0 40px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--black);
+  }
+
+  .logo span {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: var(--black);
+    border-radius: 50%;
+    margin-left: 3px;
+    vertical-align: middle;
+    margin-bottom: 2px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .last-updated {
+    font-size: 12px;
+    color: var(--gray-400);
+    font-weight: 400;
+  }
+
+  .btn-config {
+    background: var(--black);
+    color: var(--white);
+    border: none;
+    padding: 8px 18px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.15s;
+  }
+  .btn-config:hover { opacity: 0.8; }
+
+  /* ── CONFIG PANEL ── */
+  .config-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    backdrop-filter: blur(4px);
+  }
+  .config-overlay.active { display: flex; align-items: center; justify-content: center; }
+
+  .config-panel {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 40px;
+    width: 520px;
+    max-width: 90vw;
+    box-shadow: var(--shadow-md);
+  }
+
+  .config-panel h2 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+  .config-panel p { font-size: 14px; color: var(--gray-600); margin-bottom: 24px; line-height: 1.5; }
+
+  .config-panel label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+  .config-panel input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 14px;
+    margin-bottom: 16px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .config-panel input:focus { border-color: var(--black); }
+
+  .config-actions { display: flex; gap: 12px; margin-top: 8px; }
+  .btn-primary {
+    flex: 1;
+    background: var(--black);
+    color: var(--white);
+    border: none;
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.8; }
+  .btn-secondary {
+    flex: 1;
+    background: var(--gray-100);
+    color: var(--black);
+    border: none;
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+  }
+  .btn-secondary:hover { background: var(--gray-200); }
+
+  /* ── MAIN ── */
+  main { max-width: 1280px; margin: 0 auto; padding: 40px 40px 80px; }
+
+  /* ── PAGE TITLE ── */
+  .page-title {
+    margin-bottom: 32px;
+  }
+  .page-title h1 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    color: var(--black);
+  }
+  .page-title p {
+    font-size: 15px;
+    color: var(--gray-400);
+    margin-top: 4px;
+  }
+
+  /* ── FILTERS ── */
+  .filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    padding: 8px 18px;
+    border-radius: 100px;
+    border: 1.5px solid var(--gray-200);
+    background: var(--white);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: var(--black); color: var(--black); }
+  .filter-btn.active {
+    background: var(--black);
+    border-color: var(--black);
+    color: var(--white);
+  }
+
+  .filter-sep { width: 1px; height: 24px; background: var(--gray-200); margin: 0 4px; }
+
+  .date-inputs { display: flex; gap: 8px; align-items: center; }
+  .date-inputs input {
+    padding: 8px 14px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 100px;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--black);
+    outline: none;
+    cursor: pointer;
+    background: var(--white);
+    transition: border-color 0.15s;
+  }
+  .date-inputs input:focus { border-color: var(--black); }
+  .date-inputs span { font-size: 13px; color: var(--gray-400); }
+
+  /* ── SECTIONS ── */
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray-400);
+    margin-bottom: 16px;
+    margin-top: 40px;
+  }
+  .section-label:first-of-type { margin-top: 0; }
+
+  /* ── KPI GRID ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 0;
+  }
+
+  .kpi-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+  .kpi-card.accent {
+    background: var(--black);
+    color: var(--white);
+  }
+
+  .kpi-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-400);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+  }
+  .kpi-card.accent .kpi-label { color: rgba(255,255,255,0.5); }
+
+  .kpi-value {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    line-height: 1;
+    color: var(--black);
+  }
+  .kpi-card.accent .kpi-value { color: var(--white); }
+
+  .kpi-sub {
+    font-size: 13px;
+    color: var(--gray-400);
+    margin-top: 8px;
+    font-weight: 400;
+  }
+  .kpi-card.accent .kpi-sub { color: rgba(255,255,255,0.5); }
+
+  .kpi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 10px;
+  }
+  .kpi-badge.green { background: var(--green-light); color: var(--green); }
+  .kpi-badge.red { background: var(--red-light); color: var(--red); }
+  .kpi-badge.amber { background: var(--amber-light); color: var(--amber); }
+
+  /* ── CHART GRID ── */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 0;
+  }
+  .chart-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 28px;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .card:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--black);
+    letter-spacing: -0.2px;
+  }
+  .card-subtitle {
+    font-size: 12px;
+    color: var(--gray-400);
+    margin-top: 2px;
+  }
+
+  .chart-container { position: relative; height: 200px; }
+  .chart-container.tall { height: 240px; }
+
+  /* ── TABLE ── */
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gray-400);
+    padding: 0 0 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--gray-100);
+  }
+  .data-table td {
+    padding: 12px 0;
+    font-size: 14px;
+    border-bottom: 1px solid var(--gray-100);
+    color: var(--black);
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+
+  /* ── STATUS BADGE ── */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .badge-green { background: var(--green-light); color: var(--green); }
+  .badge-amber { background: var(--amber-light); color: var(--amber); }
+  .badge-red { background: var(--red-light); color: var(--red); }
+  .badge-blue { background: var(--blue-light); color: var(--blue); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-row { margin-bottom: 16px; }
+  .progress-row:last-child { margin-bottom: 0; }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .progress-label span:first-child { font-weight: 500; }
+  .progress-label span:last-child { color: var(--gray-400); }
+  .progress-track {
+    height: 6px;
+    background: var(--gray-100);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--black);
+    border-radius: 100px;
+    transition: width 0.8s ease;
+  }
+
+  /* ── LOADING / ERROR ── */
+  .state-loading, .state-error, .state-demo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 40px;
+    text-align: center;
+    color: var(--gray-400);
+    gap: 12px;
+  }
+  .state-loading p, .state-error p, .state-demo p { font-size: 15px; }
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 2.5px solid var(--gray-200);
+    border-top-color: var(--black);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    main { padding: 24px 20px 60px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .chart-grid { grid-template-columns: 1fr; }
+    .chart-grid-3 { grid-template-columns: 1fr; }
+    header { padding: 0 20px; }
+  }
+
+  /* ── DEMO BANNER ── */
+  .demo-banner {
+    background: var(--amber-light);
+    border: 1px solid #FDE68A;
+    border-radius: var(--radius-sm);
+    padding: 12px 20px;
+    font-size: 13px;
+    color: var(--amber);
+    margin-bottom: 24px;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+  }
+  .demo-banner.show { display: flex; }
+</style>
+</head>
+<body>
+
+<!-- CONFIG OVERLAY -->
+<div class="config-overlay" id="configOverlay">
+  <div class="config-panel">
+    <h2>Conectar con Google Sheets</h2>
+    <p>Para ver tus datos reales necesitas el ID de tu documento y una API Key de Google Sheets. Si no los tienes aún, puedes explorar el dashboard con datos de demo.</p>
+
+    <label>ID del documento Google Sheets</label>
+    <input type="text" id="inputSheetId" placeholder="1sbc1qk1AMEeCgBvpIfP9sp8eZWx92JhTjFqAm1ruRt0">
+
+    <label>Google Sheets API Key</label>
+    <input type="text" id="inputApiKey" placeholder="AIzaSy...">
+
+    <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;font-size:12px;color:var(--gray-600);line-height:1.6;">
+      <strong>Cómo obtener la API Key:</strong><br>
+      1. Ve a console.cloud.google.com<br>
+      2. Crea un proyecto → habilita "Google Sheets API"<br>
+      3. Credenciales → Crear credencial → Clave de API<br>
+      4. Tu documento debe estar compartido como "Cualquier persona con el link puede ver"
+    </div>
+
+    <div class="config-actions">
+      <button class="btn-secondary" onclick="loadDemo()">Ver demo</button>
+      <button class="btn-primary" onclick="saveConfig()">Conectar</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">Zirú<span></span></div>
+  <div class="header-right">
+    <span class="last-updated" id="lastUpdated">—</span>
+    <button class="btn-config" onclick="document.getElementById('configOverlay').classList.add('active')">
+      Configurar
+    </button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+  <div class="page-title">
+    <h1>Panel de Control</h1>
+    <p id="subtitle">Conecta tu Google Sheets para ver tus datos en tiempo real</p>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filters">
+    <button class="filter-btn active" onclick="setFilter('month')">Este mes</button>
+    <button class="filter-btn" onclick="setFilter('quarter')">Trimestre</button>
+    <button class="filter-btn" onclick="setFilter('year')">Este año</button>
+    <button class="filter-btn" onclick="setFilter('all')">Todo</button>
+    <div class="filter-sep"></div>
+    <div class="date-inputs">
+      <input type="date" id="dateFrom" onchange="setFilter('custom')">
+      <span>→</span>
+      <input type="date" id="dateTo" onchange="setFilter('custom')">
+    </div>
+  </div>
+
+  <!-- DEMO BANNER -->
+  <div class="demo-banner" id="demoBanner">
+    ⚡ Mostrando datos de demo — Conecta tu Google Sheets para ver tus datos reales
+  </div>
+
+  <!-- DASHBOARD CONTENT -->
+  <div id="dashboardContent">
+    <div class="state-loading">
+      <div class="spinner"></div>
+      <p>Cargando datos...</p>
+    </div>
+  </div>
+</main>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────
+let SHEET_ID = localStorage.getItem('ziru_sheet_id') || '';
+let API_KEY  = localStorage.getItem('ziru_api_key')  || '';
+let currentFilter = 'month';
+let allData = null;
+
+// ── CHART DEFAULTS ────────────────────────────────────────────────────────
+Chart.defaults.font.family = "'Inter', -apple-system, sans-serif";
+Chart.defaults.color = '#9A9A9A';
+Chart.defaults.plugins.legend.display = false;
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+window.onload = () => {
+  if (SHEET_ID && API_KEY) {
+    loadData();
+  } else {
+    document.getElementById('configOverlay').classList.add('active');
+  }
+};
+
+function saveConfig() {
+  SHEET_ID = document.getElementById('inputSheetId').value.trim();
+  API_KEY  = document.getElementById('inputApiKey').value.trim();
+  if (!SHEET_ID || !API_KEY) { alert('Por favor completa ambos campos'); return; }
+  localStorage.setItem('ziru_sheet_id', SHEET_ID);
+  localStorage.setItem('ziru_api_key',  API_KEY);
+  document.getElementById('configOverlay').classList.remove('active');
+  loadData();
+}
+
+function loadDemo() {
+  document.getElementById('configOverlay').classList.remove('active');
+  document.getElementById('demoBanner').classList.add('show');
+  allData = getDemoData();
+  renderDashboard(filterData(allData));
+  document.getElementById('lastUpdated').textContent = 'Datos de demo';
+  document.getElementById('subtitle').textContent = 'Datos de ejemplo — Conecta tu Sheets para ver los reales';
+}
+
+// ── LOAD DATA ─────────────────────────────────────────────────────────────
+async function loadData() {
+  document.getElementById('dashboardContent').innerHTML = `
+    <div class="state-loading"><div class="spinner"></div><p>Conectando con Google Sheets...</p></div>`;
+
+  try {
+    const [ventas, pagos, clientes, inventario, cxc, envios, compras, costos] = await Promise.all([
+      fetchSheet('Ventas'),
+      fetchSheet('Pagos'),
+      fetchSheet('Clientes'),
+      fetchSheet('Inventario'),
+      fetchSheet('Cuentas x Cobrar'),
+      fetchSheet('Env%C3%ADos'),
+      fetchSheet('Compras Proveedores'),
+      fetchSheet('Costos'),
+    ]);
+
+    allData = { ventas, pagos, clientes, inventario, cxc, envios, compras, costos };
+    renderDashboard(filterData(allData));
+    document.getElementById('lastUpdated').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-CO', {hour:'2-digit',minute:'2-digit'});
+    document.getElementById('subtitle').textContent = 'Datos en tiempo real de tu Google Sheets';
+  } catch(err) {
+    document.getElementById('dashboardContent').innerHTML = `
+      <div class="state-error">
+        <p style="font-size:32px">⚠️</p>
+        <p style="color:var(--black);font-weight:600">No se pudo conectar</p>
+        <p>${err.message}</p>
+        <p style="font-size:13px;margin-top:8px">Verifica que el documento sea público y la API Key sea válida</p>
+        <button class="btn-primary" style="margin-top:16px;width:200px" onclick="document.getElementById('configOverlay').classList.add('active')">Configurar</button>
+      </div>`;
+  }
+}
+
+async function fetchSheet(sheetName) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheetName}!A1:Z500?key=${API_KEY}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Error cargando "${sheetName}": ${res.status}`);
+  const data = await res.json();
+  const rows = data.values || [];
+  if (rows.length < 4) return [];
+  const headers = rows[2]; // fila 3 = encabezados
+  return rows.slice(3).map(row => {
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = row[i] || ''; });
+    return obj;
+  }).filter(r => Object.values(r).some(v => v !== ''));
+}
+
+// ── FILTER ────────────────────────────────────────────────────────────────
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  if (allData) renderDashboard(filterData(allData));
+}
+
+function filterData(data) {
+  const now = new Date();
+  let from, to = new Date();
+  to.setHours(23,59,59);
+
+  if (currentFilter === 'month') {
+    from = new Date(now.getFullYear(), now.getMonth(), 1);
+  } else if (currentFilter === 'quarter') {
+    const q = Math.floor(now.getMonth() / 3);
+    from = new Date(now.getFullYear(), q * 3, 1);
+  } else if (currentFilter === 'year') {
+    from = new Date(now.getFullYear(), 0, 1);
+  } else if (currentFilter === 'custom') {
+    from = new Date(document.getElementById('dateFrom').value);
+    to   = new Date(document.getElementById('dateTo').value);
+    to.setHours(23,59,59);
+  } else {
+    return data; // all
+  }
+
+  const inRange = (dateStr) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    return d >= from && d <= to;
+  };
+
+  return {
+    ventas:    data.ventas.filter(r   => inRange(r['Fecha Venta'] || r['Fecha'])),
+    pagos:     data.pagos.filter(r    => inRange(r['Fecha Pago']  || r['Fecha'])),
+    clientes:  data.clientes,
+    inventario:data.inventario,
+    cxc:       data.cxc.filter(r      => inRange(r['Fecha'])),
+    envios:    data.envios.filter(r   => inRange(r['Fecha Venta'] || r['Fecha'])),
+    compras:   data.compras.filter(r  => inRange(r['Fecha'])),
+    costos:    data.costos.filter(r   => inRange(r['Fecha'])),
+  };
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+const fmt = n => {
+  const num = parseFloat((n||'0').toString().replace(/[^0-9.-]/g,'')) || 0;
+  return '$' + Math.round(num).toLocaleString('es-CO');
+};
+const num = v => parseFloat((v||'0').toString().replace(/[^0-9.-]/g,'')) || 0;
+const pct = (a,b) => b > 0 ? Math.round(a/b*100) : 0;
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+function renderDashboard(d) {
+  // KPIs
+  const totalVentas   = d.ventas.reduce((s,r)  => s + num(r['Total A Pagar'] || r['Total']), 0);
+  const numVentas     = d.ventas.length;
+  const ticket        = numVentas > 0 ? totalVentas / numVentas : 0;
+  const totalCostos   = d.costos.reduce((s,r)  => s + num(r['Monto']), 0);
+  const totalCompras  = d.compras.reduce((s,r) => s + num(r['Total Factura'] || r['Total']), 0);
+  const gananciaBruta = totalVentas - totalCompras;
+  const gananciaNeta  = totalVentas - totalCompras - totalCostos;
+  const margen        = pct(gananciaNeta, totalVentas);
+  const porCobrar     = d.cxc.reduce((s,r) => {
+    if ((r['Estado']||'').toLowerCase() !== 'pagado') return s + num(r['Saldo Pendiente'] || r['Saldo']);
+    return s;
+  }, 0);
+  const numClientes   = d.clientes.length;
+  const enviosPend    = d.envios.filter(r => !['entregado'].includes((r['Estado']||'').toLowerCase())).length;
+  const stockBajo     = d.inventario.filter(r => (r['Estado']||'').includes('⚠️')).length;
+
+  // Ventas por mes
+  const ventasMes = {};
+  d.ventas.forEach(r => {
+    const fecha = r['Fecha Venta'] || r['Fecha'];
+    if (!fecha) return;
+    const d2 = new Date(fecha);
+    const key = d2.toLocaleString('es-CO', {month:'short', year:'2-digit'});
+    ventasMes[key] = (ventasMes[key] || 0) + num(r['Total A Pagar'] || r['Total']);
+  });
+  const mesesLabels = Object.keys(ventasMes).slice(-8);
+  const mesesVals   = mesesLabels.map(k => ventasMes[k]);
+
+  // Captación
+  const captacion = {};
+  d.ventas.forEach(r => {
+    const c = r['¿Cómo nos conoció?'] || r['Como nos conocio'] || 'Otro';
+    captacion[c] = (captacion[c] || 0) + 1;
+  });
+  const captKeys = Object.keys(captacion).slice(0,5);
+  const captVals = captKeys.map(k => captacion[k]);
+
+  // Medio de entrega
+  const medios = {};
+  d.ventas.forEach(r => {
+    const m = r['Medio Entrega'] || r['Medio de Entrega'] || 'Otro';
+    medios[m] = (medios[m] || 0) + 1;
+  });
+
+  // Ciudades
+  const ciudades = {};
+  d.ventas.forEach(r => {
+    const c = r['Ciudad'] || 'Sin ciudad';
+    ciudades[c] = (ciudades[c] || 0) + num(r['Total A Pagar'] || r['Total']);
+  });
+  const ciudTopKeys = Object.keys(ciudades).sort((a,b) => ciudades[b]-ciudades[a]).slice(0,5);
+
+  // Top clientes
+  const clienteVentas = {};
+  d.ventas.forEach(r => {
+    const n = r['Nombre'] || 'Sin nombre';
+    clienteVentas[n] = (clienteVentas[n] || 0) + num(r['Total A Pagar'] || r['Total']);
+  });
+  const topClientes = Object.entries(clienteVentas).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  // Estado envíos
+  const estEnvios = {};
+  d.envios.forEach(r => {
+    const e = r['Estado'] || 'Sin estado';
+    estEnvios[e] = (estEnvios[e] || 0) + 1;
+  });
+
+  // Render HTML
+  document.getElementById('dashboardContent').innerHTML = `
+
+    <!-- KPIs VENTAS -->
+    <div class="section-label">Ventas y dinero</div>
+    <div class="kpi-grid">
+      <div class="kpi-card accent">
+        <div class="kpi-label">Ingresos totales</div>
+        <div class="kpi-value">${fmt(totalVentas)}</div>
+        <div class="kpi-sub">${numVentas} ventas en el período</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Ganancia neta</div>
+        <div class="kpi-value">${fmt(gananciaNeta)}</div>
+        <span class="kpi-badge ${margen >= 0 ? 'green' : 'red'}">${margen >= 0 ? '↑' : '↓'} ${Math.abs(margen)}% margen</span>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Por cobrar</div>
+        <div class="kpi-value">${fmt(porCobrar)}</div>
+        <div class="kpi-sub">Saldo pendiente clientes</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Ticket promedio</div>
+        <div class="kpi-value">${fmt(ticket)}</div>
+        <div class="kpi-sub">Por venta</div>
+      </div>
+    </div>
+
+    <!-- CHARTS VENTAS -->
+    <div class="chart-grid" style="margin-top:16px">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Ventas por mes</div>
+            <div class="card-subtitle">Ingresos acumulados</div>
+          </div>
+        </div>
+        <div class="chart-container tall">
+          <canvas id="chartVentasMes"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Captación</div>
+            <div class="card-subtitle">Cómo nos conocieron</div>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="chartCaptacion"></canvas>
+        </div>
+        <div style="margin-top:16px">
+          ${captKeys.map((k,i) => `
+          <div class="progress-row">
+            <div class="progress-label">
+              <span>${k}</span>
+              <span>${captVals[i]} clientes</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width:${pct(captVals[i], Math.max(...captVals))}%"></div>
+            </div>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- VENTAS POR CIUDAD Y MEDIO -->
+    <div class="chart-grid-3" style="margin-top:16px">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Top ciudades</div>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Ciudad</th><th>Total</th></tr></thead>
+          <tbody>
+            ${ciudTopKeys.map(c => `<tr><td>${c}</td><td style="font-weight:600">${fmt(ciudades[c])}</td></tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Medio de entrega</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="chartMedios"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Top clientes</div>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Cliente</th><th>Total</th></tr></thead>
+          <tbody>
+            ${topClientes.map(([n,v]) => `<tr><td>${n}</td><td style="font-weight:600">${fmt(v)}</td></tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- KPIs OPERATIVO -->
+    <div class="section-label" style="margin-top:48px">Operativo</div>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Total clientes</div>
+        <div class="kpi-value">${numClientes}</div>
+        <div class="kpi-sub">En la base de datos</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Envíos pendientes</div>
+        <div class="kpi-value">${enviosPend}</div>
+        <span class="kpi-badge ${enviosPend > 0 ? 'amber' : 'green'}">${enviosPend > 0 ? 'Por gestionar' : 'Todo al día'}</span>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Stock bajo mínimo</div>
+        <div class="kpi-value">${stockBajo}</div>
+        <span class="kpi-badge ${stockBajo > 0 ? 'red' : 'green'}">${stockBajo > 0 ? 'Requiere reposición' : 'Inventario OK'}</span>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Costo inventario</div>
+        <div class="kpi-value">${fmt(totalCompras)}</div>
+        <div class="kpi-sub">Compras a proveedores</div>
+      </div>
+    </div>
+
+    <!-- ENVÍOS Y INVENTARIO -->
+    <div class="chart-grid" style="margin-top:16px">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Estado de envíos</div>
+            <div class="card-subtitle">${d.envios.length} envíos en el período</div>
+          </div>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Estado</th><th>Cantidad</th><th></th></tr></thead>
+          <tbody>
+            ${Object.entries(estEnvios).map(([e,n]) => {
+              const cls = e.toLowerCase().includes('entreg') ? 'badge-green' :
+                          e.toLowerCase().includes('camino') ? 'badge-amber' :
+                          e.toLowerCase().includes('retiro') ? 'badge-blue' : 'badge-red';
+              return `<tr>
+                <td><span class="badge ${cls}">${e}</span></td>
+                <td style="font-weight:600">${n}</td>
+                <td style="color:var(--gray-400)">${pct(n, d.envios.length)}%</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Inventario</div>
+            <div class="card-subtitle">Stock actual por producto</div>
+          </div>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Producto</th><th>Stock</th><th>Estado</th></tr></thead>
+          <tbody>
+            ${d.inventario.slice(0,6).map(r => {
+              const stock = num(r['Stock Actual'] || r['Stock']);
+              const est   = r['Estado'] || (stock <= 0 ? '⚠️ Stock bajo' : 'OK');
+              const cls   = est.includes('⚠️') ? 'badge-red' : 'badge-green';
+              return `<tr>
+                <td>${r['Producto'] || r['Nombre'] || '—'}</td>
+                <td style="font-weight:600">${stock}</td>
+                <td><span class="badge ${cls}">${est.replace('⚠️ ','')}</span></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- GANANCIAS -->
+    <div class="section-label" style="margin-top:48px">Resultados financieros</div>
+    <div class="chart-grid-3">
+      <div class="card">
+        <div class="card-title" style="margin-bottom:20px">Resumen financiero</div>
+        <div class="progress-row">
+          <div class="progress-label"><span>Ingresos</span><span>${fmt(totalVentas)}</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-label"><span>Costo mercancía</span><span>${fmt(totalCompras)}</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:${pct(totalCompras,totalVentas)}%;background:var(--red)"></div></div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-label"><span>Ganancia bruta</span><span>${fmt(gananciaBruta)}</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:${pct(gananciaBruta,totalVentas)}%;background:var(--green)"></div></div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-label"><span>Costos operativos</span><span>${fmt(totalCostos)}</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:${pct(totalCostos,totalVentas)}%;background:var(--amber)"></div></div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-label"><span style="font-weight:700">Ganancia neta</span><span style="font-weight:700;color:${gananciaNeta>=0?'var(--green)':'var(--red)'}">${fmt(gananciaNeta)}</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:${Math.max(0,pct(gananciaNeta,totalVentas))}%;background:${gananciaNeta>=0?'var(--green)':'var(--red)'}"></div></div>
+        </div>
+      </div>
+      <div class="card" style="grid-column: span 2">
+        <div class="card-header">
+          <div class="card-title">Desglose de costos operativos</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center">
+          <div class="chart-container"><canvas id="chartCostos"></canvas></div>
+          <div>
+            ${(() => {
+              const costosCat = {};
+              d.costos.forEach(r => {
+                const c = r['Categoría'] || r['Categoria'] || 'Otro';
+                costosCat[c] = (costosCat[c] || 0) + num(r['Monto']);
+              });
+              return Object.entries(costosCat).map(([c,v]) => `
+              <div class="progress-row">
+                <div class="progress-label"><span>${c}</span><span>${fmt(v)}</span></div>
+                <div class="progress-track"><div class="progress-fill" style="width:${pct(v, totalCostos)}%"></div></div>
+              </div>`).join('') || '<p style="color:var(--gray-400);font-size:14px">Sin costos operativos registrados</p>';
+            })()}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // ── CHARTS ──────────────────────────────────────────────────
+  const COLORS = ['#0A0A0A','#3A3A3A','#6A6A6A','#9A9A9A','#C0C0C0','#E0E0E0'];
+
+  // Ventas por mes
+  new Chart(document.getElementById('chartVentasMes'), {
+    type: 'bar',
+    data: {
+      labels: mesesLabels,
+      datasets: [{
+        data: mesesVals,
+        backgroundColor: '#0A0A0A',
+        borderRadius: 8,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { tooltip: { callbacks: { label: ctx => fmt(ctx.raw) } } },
+      scales: {
+        x: { grid: { display: false }, border: { display: false } },
+        y: { grid: { color: '#F0F0F0' }, border: { display: false },
+             ticks: { callback: v => '$' + (v/1000000 >= 1 ? (v/1000000).toFixed(1)+'M' : (v/1000).toFixed(0)+'K') } }
+      }
+    }
+  });
+
+  // Captación doughnut
+  if (captKeys.length > 0) {
+    new Chart(document.getElementById('chartCaptacion'), {
+      type: 'doughnut',
+      data: {
+        labels: captKeys,
+        datasets: [{ data: captVals, backgroundColor: COLORS, borderWidth: 0, hoverOffset: 4 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '70%',
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.label + ': ' + ctx.raw } } }
+      }
+    });
+  }
+
+  // Medios de entrega
+  const medKeys = Object.keys(medios);
+  const medVals = medKeys.map(k => medios[k]);
+  if (medKeys.length > 0) {
+    new Chart(document.getElementById('chartMedios'), {
+      type: 'doughnut',
+      data: {
+        labels: medKeys,
+        datasets: [{ data: medVals, backgroundColor: COLORS, borderWidth: 0, hoverOffset: 4 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '65%',
+        plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 10, padding: 12, font: { size: 11 } } } }
+      }
+    });
+  }
+
+  // Costos por categoría
+  const costosCat2 = {};
+  d.costos.forEach(r => {
+    const c = r['Categoría'] || r['Categoria'] || 'Otro';
+    costosCat2[c] = (costosCat2[c] || 0) + num(r['Monto']);
+  });
+  const costoKeys = Object.keys(costosCat2);
+  if (costoKeys.length > 0) {
+    new Chart(document.getElementById('chartCostos'), {
+      type: 'doughnut',
+      data: {
+        labels: costoKeys,
+        datasets: [{ data: costoKeys.map(k => costosCat2[k]), backgroundColor: COLORS, borderWidth: 0 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '65%',
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+}
+
+// ── DEMO DATA ─────────────────────────────────────────────────────────────
+function getDemoData() {
+  const meses = ['2026-04-15','2026-05-03','2026-05-20','2026-06-05','2026-06-15','2026-06-25','2026-07-02','2026-07-08'];
+  const ventas = [
+    {Nombre:'Daniela Torres','Fecha Venta':meses[7],'Total A Pagar':'350000',Ciudad:'Bogotá','¿Cómo nos conoció?':'TikTok','Medio Entrega':'Interrapidísimo'},
+    {Nombre:'Camila Ruiz','Fecha Venta':meses[7],'Total A Pagar':'330000',Ciudad:'Medellín','¿Cómo nos conoció?':'Instagram','Medio Entrega':'Contra entrega'},
+    {Nombre:'Laura Gómez','Fecha Venta':meses[6],'Total A Pagar':'660000',Ciudad:'Bogotá','¿Cómo nos conoció?':'MarketPlace','Medio Entrega':'Propio'},
+    {Nombre:'Ana Martínez','Fecha Venta':meses[6],'Total A Pagar':'330000',Ciudad:'Cali','¿Cómo nos conoció?':'TikTok','Medio Entrega':'Interrapidísimo'},
+    {Nombre:'Sofía Herrera','Fecha Venta':meses[5],'Total A Pagar':'330000',Ciudad:'Bogotá','¿Cómo nos conoció?':'Referido','Medio Entrega':'Contra entrega'},
+    {Nombre:'Valentina López','Fecha Venta':meses[5],'Total A Pagar':'350000',Ciudad:'Medellín','¿Cómo nos conoció?':'Instagram','Medio Entrega':'Interrapidísimo'},
+    {Nombre:'María Pérez','Fecha Venta':meses[4],'Total A Pagar':'330000',Ciudad:'Bogotá','¿Cómo nos conoció?':'TikTok','Medio Entrega':'Propio'},
+    {Nombre:'Isabella Cruz','Fecha Venta':meses[3],'Total A Pagar':'699600',Ciudad:'Bogotá','¿Cómo nos conoció?':'MarketPlace','Medio Entrega':'Contra entrega'},
+    {Nombre:'Manuela Díaz','Fecha Venta':meses[2],'Total A Pagar':'330000',Ciudad:'Cali','¿Cómo nos conoció?':'Instagram','Medio Entrega':'Interrapidísimo'},
+    {Nombre:'Paula Morales','Fecha Venta':meses[1],'Total A Pagar':'350000',Ciudad:'Bogotá','¿Cómo nos conoció?':'TikTok','Medio Entrega':'Propio'},
+  ];
+  const cxc = ventas.map((v,i) => ({
+    'ID Venta':'V-00'+i,
+    Fecha: v['Fecha Venta'],
+    Cliente: v.Nombre,
+    'Total Venta': v['Total A Pagar'],
+    'Total Pagado': i < 7 ? v['Total A Pagar'] : '0',
+    'Saldo Pendiente': i < 7 ? '0' : v['Total A Pagar'],
+    Estado: i < 7 ? 'Pagado' : 'Pendiente',
+  }));
+  const envios = ventas.map((v,i) => ({
+    'ID Envío':'ENV-00'+i,
+    'Fecha Venta': v['Fecha Venta'],
+    Nombre: v.Nombre,
+    Ciudad: v.Ciudad,
+    'Medio Entrega': v['Medio Entrega'],
+    Estado: i < 6 ? 'Entregado' : (i === 6 ? 'En camino' : 'Pendiente'),
+  }));
+  return {
+    ventas,
+    pagos: ventas.slice(0,7).map((v,i) => ({Fecha: v['Fecha Venta'], 'Fecha Pago': v['Fecha Venta'], 'ID Venta':'V-00'+i, 'Tipo de Pago':'Pago completo', Valor: v['Total A Pagar']})),
+    clientes: [...new Set(ventas.map(v=>v.Nombre))].map(n => ({Nombre:n,Teléfono:'310000000'+Math.floor(Math.random()*9),Estado:'Activo'})),
+    inventario: [
+      {Producto:'Zapatero Aura',Categoría:'Organizador','Stock Actual':'8','Stock Mínimo':'3',Estado:'OK'},
+      {Producto:'Zapatero Nova',Categoría:'Organizador','Stock Actual':'2','Stock Mínimo':'3',Estado:'⚠️ Stock bajo'},
+      {Producto:'Zapatero Nexo',Categoría:'Organizador','Stock Actual':'5','Stock Mínimo':'3',Estado:'OK'},
+      {Producto:'Zapatero Siena',Categoría:'Organizador','Stock Actual':'0','Stock Mínimo':'3',Estado:'⚠️ Stock bajo'},
+      {Producto:'Zapatero Axis',Categoría:'Organizador','Stock Actual':'4','Stock Mínimo':'3',Estado:'OK'},
+    ],
+    cxc, envios,
+    compras: [{Fecha:'2026-06-01','Total Factura':'2090000',Estado:'Recibido'},{Fecha:'2026-06-15','Total Factura':'2508000',Estado:'Recibido'},{Fecha:'2026-07-01','Total Factura':'3135000',Estado:'Pendiente'}],
+    costos: [{Fecha:'2026-07-01',Categoría:'Arriendo',Monto:'500000'},{Fecha:'2026-07-01',Categoría:'Publicidad',Monto:'200000'},{Fecha:'2026-07-01',Categoría:'Servicios',Monto:'80000'}],
+  };
+}
+</script>
+</body>
+</html>
